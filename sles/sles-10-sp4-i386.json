@@ -1,0 +1,105 @@
+{
+  "builders": [
+    {
+      "boot_command": [
+        "<esc><enter><wait>",
+        "linux netdevice=eth0 netsetup=dhcp install=cd:/<wait>",
+        " lang=en_US autoyast=http://{{ .HTTPIP }}:{{ .HTTPPort }}/{{user `autoinst_cfg`}}<wait>",
+        " textmode=1<wait>",
+        "<enter><wait>"
+      ],
+      "boot_wait": "10s",
+      "disk_size": "{{user `disk_size`}}",
+      "guest_additions_path": "VBoxGuestAdditions_{{.Version}}.iso",
+      "guest_os_type": "Linux26",
+      "hard_drive_interface": "sata",
+      "headless": "{{ user `headless` }}",
+      "http_directory": "http",
+      "iso_checksum": "{{user `iso_checksum`}}",
+      "iso_checksum_type": "{{user `iso_checksum_type`}}",
+      "iso_url": "{{user `mirror`}}/{{user `iso_name`}}",
+      "output_directory": "../builds/packer-{{user `template`}}-virtualbox",
+      "shutdown_command": "echo 'vagrant' | sudo -S /sbin/halt -h -p",
+      "ssh_password": "vagrant",
+      "ssh_port": 22,
+      "ssh_username": "vagrant",
+      "ssh_wait_timeout": "10000s",
+      "type": "virtualbox-iso",
+      "vboxmanage": [
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--memory",
+          "{{ user `memory` }}"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--cpus",
+          "{{ user `cpus` }}"
+        ],
+        [
+          "modifyvm",
+          "{{.Name}}",
+          "--paravirtprovider",
+          "none"
+        ]
+      ],
+      "virtualbox_version_file": ".vbox_version",
+      "vm_name": "{{ user `template` }}"
+    }
+  ],
+  "post-processors": [
+    {
+      "output": "../builds/{{user `box_basename`}}.{{.Provider}}.box",
+      "type": "vagrant"
+    }
+  ],
+  "provisioners": [
+    {
+      "environment_vars": [
+        "HOME_DIR=/home/vagrant",
+        "http_proxy={{user `http_proxy`}}",
+        "https_proxy={{user `https_proxy`}}",
+        "no_proxy={{user `no_proxy`}}"
+      ],
+      "execute_command": "echo 'vagrant' | {{.Vars}} sudo -S -E sh '{{.Path}}'",
+      "expect_disconnect": true,
+      "scripts": [
+        "../_common/sshd.sh",
+        "../_common/vagrant.sh",
+        "../_common/virtualbox.sh",
+        "../_common/vmware.sh",
+        "../_common/parallels.sh",
+        "scripts/sudoers.sh",
+        "scripts/cleanup-i386.sh",
+        "../_common/minimize-sles10-i386.sh"
+      ],
+      "type": "shell"
+    }
+  ],
+  "variables": {
+    "_DOWNLOAD_SITE": "https://www.suse.com/products/server/download",
+    "_README": "You must download the automated installer iso from the following page, and then place it in the packer_cache dir",
+    "arch": "32",
+    "autoinst_cfg": "sles-10-sp4-i386-autoinst.xml",
+    "box_basename": "sles-10-sp4",
+    "build_timestamp": "{{isotime \"20060102150405\"}}",
+    "cpus": "1",
+    "disk_size": "10240",
+    "git_revision": "__unknown_git_revision__",
+    "headless": "",
+    "http_proxy": "{{env `http_proxy`}}",
+    "https_proxy": "{{env `https_proxy`}}",
+    "iso_checksum": "01dc5d9a4f671c25c2e0a750a9310aa09110c609b8cc8fe3d183c007cac96d48",
+    "iso_checksum_type": "sha256",
+    "iso_name": "SLES-10-SP4-DVD-i386-GM-DVD1.iso",
+    "memory": "1024",
+    "mirror": "./packer_cache",
+    "name": "sles-10-sp4",
+    "template": "sles-10-sp4-i386",
+    "version": "TIMESTAMP",
+    "vm_description": "aaaaaaaaaaaaaaa",
+    "vm_version": "1.1.1"
+  }
+}
